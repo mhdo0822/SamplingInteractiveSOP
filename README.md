@@ -4,7 +4,7 @@ Interactive Python and HTML guides for standardized animal and feed sampling wor
 
 This repository contains practical digital guides developed to support more consistent animal and feed sampling during field and laboratory workflows. The tools were built in Python and HTML to make procedures easier to follow during training, data collection, and day-to-day implementation.
 
-## Why this matters
+## Overall Goal
 
 Consistent sampling procedures are important for data quality and reproducibility in animal research. Variation in sample collection, labeling, handling, or storage can affect downstream analyses and interpretation. These guides were developed to support standardization and improve the practical implementation of sampling protocols.
 
