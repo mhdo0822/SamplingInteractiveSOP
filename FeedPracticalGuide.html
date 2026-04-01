@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Feed Sampling SOP — Interactive Guide</title>
+  <style>
+    :root{
+      --bg:#f7f3e9; --panel:#f2eee5; --card:#eef3ef; --ink:#27323a; --muted:#6b7280; --accent:#2f855a; --ok:#16a34a; --warn:#b45309; --err:#b91c1c; --border:rgba(0,0,0,.08);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial, sans-serif; color:var(--ink); background:linear-gradient(180deg,#f7f3e9,#f2efe6 60%,#f7f3e9);}    
+    a{color:var(--accent)}
+    .layout{display:grid; grid-template-columns: 280px 1fr; min-height:100vh}
+    nav{position:sticky; top:0; align-self:start; height:100vh; overflow:auto; background:var(--panel); border-right:1px solid var(--border); padding:20px}
+    nav h1{font-size:18px; margin:0 0 12px}
+    nav .sub{color:var(--muted); font-size:12px; margin-bottom:12px}
+    nav input[type="search"]{width:100%; padding:8px 10px; background:#0a1020; border:1px solid var(--border); border-radius:8px; color:var(--ink); margin-bottom:12px}
+    nav ul{list-style:none; padding:0; margin:0}
+    nav li{margin:4px 0}
+    nav a{display:block; padding:8px 10px; border-radius:8px; color:var(--ink); text-decoration:none; border:1px solid transparent}
+    nav a:hover{background:#0b1a33; border-color:var(--border)}
+
+    main{padding:28px; max-width:1000px}
+    .hdr{display:flex; flex-wrap:wrap; gap:12px; justify-content:space-between; align-items:center; margin-bottom:10px}
+    .hdr h2{margin:0; font-size:28px}
+    .badges{display:flex; gap:8px; flex-wrap:wrap}
+    .badge{font-size:12px; padding:6px 8px; border:1px solid var(--border); color:var(--muted); border-radius:999px}
+
+    .card{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px; margin:18px 0; box-shadow: 0 1px 1px rgba(0,0,0,.2), 0 16px 40px rgba(0,0,0,.25);}    
+    .card h3{margin:0 0 8px; font-size:18px}
+    .grid{display:grid; gap:14px}
+    @media (min-width:900px){ .grid.cols-2{grid-template-columns:1fr 1fr} }
+    .video{position:relative; width:100%; aspect-ratio:16/9; border:1px solid var(--border); border-radius:12px; overflow:hidden; background:#e5e7eb}
+    .video iframe{position:absolute; inset:0; width:100%; height:100%; border:0}
+
+    details{background:rgba(0,0,0,.03); border:1px dashed var(--border); border-radius:10px; padding:10px 12px}
+    details summary{cursor:pointer; color:var(--muted)}
+
+    .kpi{display:flex; gap:16px; flex-wrap:wrap}
+    .kpi div{background:#e9f2ec; border:1px solid var(--border); padding:10px 12px; border-radius:10px}
+
+    .list{margin:0; padding-left:18px}
+    .list li{margin:10px 0}
+    .checklist{display:grid; gap:8px}
+    .check{display:flex; gap:10px; align-items:flex-start; background:rgba(0,0,0,.03); border:1px solid var(--border); padding:10px 12px; border-radius:10px}
+    .check input{margin-top:2px}
+
+    .toolbar{display:flex; gap:10px; flex-wrap:wrap}
+    button{background:#e8f3ee; color:var(--ink); border:1px solid var(--border); padding:8px 12px; border-radius:10px; cursor:pointer}
+    button:hover{background:#d9ece4}
+    .yt-link{color:#c4302b; text-decoration:underline; font-weight:600}
+    .yt-btn{display:inline-flex; align-items:center; gap:8px; background:#ff0000; color:#fff; border:1px solid #b91c1c; padding:8px 12px; border-radius:999px; text-decoration:none}
+    .yt-btn:hover{filter:brightness(0.95)}
+    .yt-btn svg{display:block}
+    .cta{display:block; margin:0 0 12px; background:var(--accent); color:#fff; text-align:center; padding:10px 12px; border:1px solid var(--border); border-radius:10px; text-decoration:none}
+    .cta:hover{filter:brightness(0.95)}
+    .attention{background:#fff7ed; border:1px solid var(--warn); color:#7c2d12; padding:12px 14px; border-radius:10px; margin:18px 0}
+
+    table{width:100%; border-collapse:collapse; font-size:14px}
+    th,td{padding:8px 10px; border:1px solid var(--border)}
+    th{background:#e5efe9; text-align:left}
+
+    .footer{color:var(--muted); font-size:12px; margin:30px 0 80px}
+
+    @media (max-width:900px){ .layout{grid-template-columns:1fr}; nav{position:relative; height:auto} }
+
+    /* Print */
+    @media print{
+      nav{display:none}
+      body{background:#fff; color:#000}
+      main{padding:0}
+      .card{box-shadow:none}
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <h1>Feed Sampling</h1>
+      <input id="filter" type="search" placeholder="Filter sections…" oninput="filterNav(this.value)" />
+      <ul id="navlist">
+        <li><a href="#start">Start here</a></li>
+        <li><a href="#templates">Labeling</a></li>
+        <li><a href="#attention">Attention</a></li>
+        <li><a href="#hay">Hay / Straw</a></li>
+        <li><a href="#pasture">Pasture</a></li>
+        <li><a href="#forage-crops">Forage crops (in field)</a></li>
+        <li><a href="#green-chop">Green‑chopped forages</a></li>
+        <li><a href="#silage">Silage</a></li>
+        <li><a href="#concentrates">Concentrates & grains</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <section id="overview" class="card">
+        <div class="hdr">
+          <h2>Feed Sampling - Interactive Video Guide</h2>
+        </div>
+        <p>For the full protocol, click <a href="https://docs.google.com/document/d/10yMFGrWUMpaarRXcZYiLzNMJ1Kw3pFx4/edit?usp=drive_link&ouid=108573518698300363837&rtpof=true&sd=true" target="_blank" rel="noopener">here</a>.</p>
+      </section>
+
+      <section id="start" class="card">
+        <div class="hdr">
+          <h2>Start here</h2>
+          
+        </div>
+        <div class="grid">
+          <div>
+            <p>⚠️ Please follow the instructions below for collecting representative feed samples. Make sure to also get the photo of each feed.</p>
+            <h3>Basic principles</h3>
+            <ul class="list">
+              <li>Always aim for a representative sample.</li>
+              <li>Cover the potential range of maturity harvested and fed (e.g., early vegetative, late vegetative, early bloom, mid bloom, late bloom, milk stage, dough stage, mature).</li>
+              <li>If the species is harvested multiple times a year, sample across cuttings.</li>
+              <li>Where the species is produced under distinct climates/regions, collect per region.</li>
+              <li>Sample both dry (summer) and wet (winter) seasons where relevant.</li>
+              <li>Target ≈ 1 kg dried & ground material per ingredient (see table below).</li>
+            </ul>
+            <h3>Equipment</h3>
+            <ul class="list">
+              <li>Forage sampler</li>
+              <li>5-gallon/ 19-liter bucket</li>
+              <li>Hatchet/shear</li>
+              <li>Clipper</li>
+              <li>Sack thief (bag trier)</li>
+              <li>Grain probe</li>
+              <li>30 x 30 cm and 50 x 50 cm frame</li>
+            </ul>
+            <h3>Distribution plan</h3>
+            <ul class="list">
+              <li>Send ≥ 500 g dried & ground to CVAS (all samples).</li>
+              <li>For selected samples: 120 g to ILRI (NIR).</li>
+              <li>Store 200 g of samples as backup.</li>
+            </ul>
+            <details><summary>Fresh kg to collect (by expected DM%)</summary>
+              <div style="overflow:auto; margin-top:10px">
+                <table>
+                  <thead><tr><th>DM %</th><th>Fresh kg to collect</th></tr></thead>
+                  <tbody>
+                    <tr><td>90%</td><td>1.11</td></tr>
+                    <tr><td>80%</td><td>1.25</td></tr>
+                    <tr><td>70%</td><td>1.43</td></tr>
+                    <tr><td>60%</td><td>1.67</td></tr>
+                    <tr><td>50%</td><td>2.00</td></tr>
+                    <tr><td>40%</td><td>2.50</td></tr>
+                    <tr><td>30%</td><td>3.30</td></tr>
+                    <tr><td>20%</td><td>5.00</td></tr>
+                    <tr><td>10%</td><td>10.00</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </details>
+          </div>
+          
+        </div>
+      </section>
+
+      <section id="templates" class="card">
+        <div class="hdr"><h2>Labeling</h2></div>
+        <ul class="list">
+          <li>Each samples gets an ID, a QR code, and a image.</li>
+          <li>ID format: [COUNTRY][SOURCE#][LAB] → e.g., IND1C, IND1I, IND1L, IND1B.</li>
+          <li>COUNTRY = 3-letter code (e.g., IND).</li>
+          <li>SOURCE# = sequential number for the feed source/lot (1, 2, 3…).</li>
+          <li>LAB = C (CVAS), I (ILRI), L (local lab).</li>
+          <li>To do: a template printable label???</li>
+        </ul>
+      </section>
+
+      <section id="attention" class="card">
+        <div class="hdr"><h2>Attention</h2></div>
+        <div class="attention">
+          </strong> The video demos are intended to give an idea of what to do and may slightly differ from the recommended protocols. Please make sure to follow the protocol steps exactly.
+        </div>
+      </section>
+
+      <section id="hay" class="card">
+        <div class="hdr"><h2>Hay / Straw</h2></div>
+        
+        <div class="grid cols-2">
+          <div>
+            <h3>With hay probe (preferred)</h3>
+            <ul class="list">
+              <li>Sample ≥20% of bales per lot (one core per randomly selected bale).</li>
+              <li>Square bales: insert the probe perpendicular on the small end.</li>
+              <li>Round bales: insert the probe around the curved circumference (not the end).</li>
+              <li>Penetrate ~30 cm.</li>
+              <li>Place each subsample in a ~19-liter bucket and mix to get a single composite representative sample.</li>
+              <li>Put the representative sample in a plastic bag and seal tightly.</li>
+            </ul>
+          </div>
+          <div>
+            <div class="toolbar" style="margin-top:8px">
+              <a class="yt-btn" href="https://youtube.com/clip/UgkxrjeLWgBvaGw6_m8BTZDl4r5D5kuvANnY?si=u8VY2Q-X32TYuUyK" target="_blank" rel="noopener">
+                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+                Watch demo
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid cols-2">
+          <div>
+            <h3>Without hay probe</h3>
+            <ul class="list">
+              <li>Sample ≥20% of bales per lot (one core per randomly selected bale).</li>
+              <li>Remove a small section from each bale and cut the hay into (~8 cm) lengths with shears or a hatchet.</li>
+              <li>Make sure to include a representative combination of leaves and stems. Placing samples on a smoother surface can be helpful to ensure leaves are collected.</li>
+              <li>Mix and randomly grab handfuls of the chopped representative sample.</li>
+              <li>Mix and put the representative sample in a plastic bag and seal tightly.</li>
+            </ul>
+          </div>
+          <div>
+            <div class="toolbar" style="margin-top:8px">
+              <a class="yt-btn" href="https://youtu.be/xSEnuHRq7OU?si=GY2LYzZc3OvPpa8s&t=83" target="_blank" rel="noopener">
+                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+                Watch demo
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h3>Loose hay/straw</h3>
+          <ul class="list">
+            <li>Get samples from 15–20 positions per lot; keep all leafy material.</li>
+            <li>Cut the hay into 3 in (≈8 cm).</li>
+            <li>Mix and randomly grab handfuls of the chopped representative sample.</li>
+            <li>Mix and put the representative sample in a plastic bag and seal tightly.</li>
+          </ul>
+          <h4>Chopped or ground hay</h4>
+          <ul class="list">
+            <li>During grinding: collect ~10 grab samples across the lot, combine in one plastic bag, mix, seal tightly.</li>
+            <li>Previously ground/chopped piles: sample beneath the surface; take ~¼ of samples from the top half and the rest from the lower half; avoid fines sifting between fingers. Mix in a plastic bag and seal tightly.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="pasture" class="card">
+        <div class="hdr"><h2>Pasture</h2></div>
+        <div class="grid cols-2">
+          <div>
+            <ul class="list">
+              <li>Walk an "M" pattern across the pasture and harvest at regular intervals.</li>
+              <li>Collect from 8–10 random sites within areas of similar species, soils, and topography.</li>
+              <li>At each site, clip at 5 cm stubble height (above soil). Use a 30.5 × 30.5 cm (1 ft²) frame; use 50 × 50 cm if forage density/structure requires it.</li>
+              <li>Combine and mix all cut forage in a clean container, then take a representative subsample for analysis.</li>
+              <li>Put the representative sample in a plastic bag and seal tightly.</li>
+            </ul>
+          </div>
+          <div>
+            <div class="toolbar" style="margin-top:8px">
+              <a class="yt-btn" href="https://youtube.com/clip/UgkxebFH9nUERj3CEL1xQOttQIvGL_W2IABI?si=XV6-yRloGq3EjNyu" target="_blank" rel="noopener">
+                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+                Watch demo
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="forage-crops" class="card">
+        <div class="hdr"><h2>Forage crops (standing field)</h2></div>
+        <div class="grid cols-2">
+          <div>
+            <ul class="list">
+              <li>Walk an "M" pattern and harvest at regular intervals.</li>
+              <li>Collect from 8–10 random sites across the field.</li>
+              <li>At each site, cut all plants within a 1 ft² area (≈30.5 × 30.5 cm) at normal harvesting height.</li>
+              <li>Chop to 1–2 in (2.5–5 cm), mix thoroughly, and take a representative subsample.</li>
+              <li>Put the representative sample in a plastic bag and seal tightly.</li>
+            </ul>
+          </div>
+          <div>
+            <div class="toolbar" style="margin-top:8px">
+              <a class="yt-btn" href="https://www.youtube.com/clip/UgkxvqOfuONveIzU7bKzYCu0lGZbfNM8B0Eg" target="_blank" rel="noopener">
+                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+                Watch demo
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="green-chop" class="card">
+        <div class="hdr"><h2>Green‑chopped forages</h2></div>
+        <div class="grid cols-2">
+          <div>
+            <ul class="list">
+              <li>Randomly grab a handful of the chopped material from the cutter, blower or several locations in a wagon or truck.</li>
+              <li>Tightly pack the bag and seal after excluding the air.</li>
+            </ul>
+          </div>
+          <div>
+            
+          </div>
+        </div>
+      </section>
+
+      <section id="silage" class="card">
+        <div class="hdr"><h2>Silage</h2></div>
+        
+        <div>
+          <h3>General</h3>
+          <ul class="list">
+            <li>Collect from multiple locations to be representative.</li>
+            <li>Freeze immediately after collection and keep frozen until processing.</li>
+          </ul>
+        </div>
+
+        <div class="grid cols-2">
+          <div>
+            <h3>Trench silo</h3>
+            <ul class="list">
+              <li>Clean the face (center); remove a 6 × 12 in (15 × 30 cm) column from top to bottom, mix thoroughly, take a representative subsample.</li>
+              <li>Drill 4–6 holes from the top (post-hole digger or similar), combine only good silage, mix, and subsample.</li>
+            </ul>
+          </div>
+          <div>
+            
+          </div>
+        </div>
+
+        <div class="grid cols-2">
+          <div>
+            <h3>Upright silo</h3>
+            <ul class="list">
+              <li>Representative sampling is difficult.</li>
+              <li>Take grab samples from a day's feed; enter only if fermentation has subsided (safety first).</li>
+              <li>Use the same approach as an unopened trench (multiple top holes, mix, subsample).</li>
+            </ul>
+          </div>
+          <div>
+            
+          </div>
+        </div>
+
+        <div class="grid cols-2">
+          <div>
+            <h3>Silo bag</h3>
+            <ul class="list">
+              <li>Take 5–8 handfuls across the entire face, mix in a bucket, and bag a representative sample.</li>
+              <li>Collect 8–10 core samples along the entire length and both sides; tape core holes closed to prevent oxygen entry/spoilage. Mix and bag a representative sample.</li>
+            </ul>
+          </div>
+          <div>
+            
+          </div>
+        </div>
+
+        <div class="grid cols-2">
+          <div>
+            <h3>Sacked feed</h3>
+            <ul class="list">
+              <li>From ≥5–6 sacks, take 1–2 lb (0.45–0.90 kg) total, mix, and submit a representative subsample.</li>
+              <li>Use a small probe or sack thief when available.</li>
+            </ul>
+          </div>
+          <div>
+            
+          </div>
+        </div>
+      </section>
+
+      <section id="concentrates" class="card">
+        <div class="hdr"><h2>Concentrates</h2></div>
+        
+        <div class="grid cols-2">
+          <div>
+            <h3>Bulk/commodity feeds</h3>
+            <ul class="list">
+              <li>Composite of at least 10 to 15 areas of a given lot of feed.</li>
+              <li>When mixing the composite, avoid particle-size segregation to prevent bias.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>How‑to video</h3>
+            
+          </div>
+        </div>
+
+        <div class="grid cols-2">
+          <div>
+            <h3>Grain in bin</h3>
+            <ul class="list">
+              <li>Use a grain probe to collect samples when possible.</li>
+              <li>If no probe is available, take random grab samples from 10–15 areas, combine and mix, and submit a representative subsample for analysis.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>How‑to video</h3>
+            
+          </div>
+        </div>
+
+        <div class="grid cols-2">
+          <div>
+            <h3>Coproduct feeds</h3>
+            <ul class="list">
+              <li>For each load received, take grab samples from 4–5 locations.</li>
+              <li>Composite and place in a properly sealed sample bag.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>How‑to video</h3>
+            
+          </div>
+        </div>
+      </section>
+
+
+      
+
+      <div class="footer">© 2025 GMH × UCD — Field guide generated for partners. Interactive SOP developed by Maria Helena de Oliveira.</div>
+    </main>
+  </div>
+
+  <script>
+    // Last updated (if element present)
+    const updatedEl = document.getElementById('updated');
+    if(updatedEl){ updatedEl.textContent = new Date().toLocaleDateString(); }
+
+    // Persist checklist state
+    const saveKey = 'sopChecksV1';
+    const checks = document.querySelectorAll('.checklist input[type="checkbox"]');
+    const state = JSON.parse(localStorage.getItem(saveKey) || '{}');
+    checks.forEach((cb, i) => {
+      const key = cb.closest('.checklist').dataset.scope + ':' + i;
+      cb.checked = !!state[key];
+      cb.addEventListener('change', () => {
+        const s = JSON.parse(localStorage.getItem(saveKey) || '{}');
+        s[key] = cb.checked;
+        localStorage.setItem(saveKey, JSON.stringify(s));
+      });
+    });
+    function resetChecks(){ localStorage.removeItem(saveKey); document.querySelectorAll('.checklist input').forEach(c=>c.checked=false) }
+
+    // Expand / collapse all details
+    function toggleAll(open){ document.querySelectorAll('details').forEach(d=>d.open=open) }
+
+    // Filter nav
+    function filterNav(q){
+      q = (q||'').toLowerCase();
+      document.querySelectorAll('#navlist li').forEach(li =>{
+        const a = li.querySelector('a');
+        li.style.display = a.textContent.toLowerCase().includes(q) ? '' : 'none';
+      });
+    }
+
+    // Open external video
+    function openVideo(btn, url){ if(url) window.open(url, '_blank', 'noopener'); }
+  </script>
+</body>
+</html>

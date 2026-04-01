@@ -1,0 +1,418 @@
+"""
+Animal Sampling SOP interactive page.
+
+Default: writes AnimalSamplingPracticalGuide.html next to this script.
+- Write file: python3 Animal_SOP.py
+- Write and open: python3 Animal_SOP.py --open
+- Serve instead: python3 Animal_SOP.py --serve [--port 8000]
+"""
+
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import urlparse
+import argparse
+import webbrowser
+import os
+
+
+HTML = '''<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Animal Sampling SOP — Practical Guide</title>
+  <style>
+    :root{
+      --bg:#f7f3e9; --panel:#f2eee5; --card:#eef3ef; --ink:#27323a; --muted:#6b7280; --accent:#2f855a; --ok:#16a34a; --warn:#b45309; --err:#b91c1c; --border:rgba(0,0,0,.08);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial, sans-serif; color:var(--ink); background:linear-gradient(180deg,#f7f3e9,#f2efe6 60%,#f7f3e9);}    
+    a{color:var(--accent)}
+    .layout{display:grid; grid-template-columns: 280px 1fr; min-height:100vh}
+    nav{position:sticky; top:0; align-self:start; height:100vh; overflow:auto; background:var(--panel); border-right:1px solid var(--border); padding:20px}
+    nav h1{font-size:18px; margin:0 0 12px}
+    nav input[type="search"]{width:100%; padding:8px 10px; background:#0a1020; border:1px solid var(--border); border-radius:8px; color:var(--ink); margin-bottom:12px}
+    nav ul{list-style:none; padding:0; margin:0}
+    nav li{margin:4px 0}
+    nav a{display:block; padding:8px 10px; border-radius:8px; color:var(--ink); text-decoration:none; border:1px solid transparent}
+    nav a:hover{background:#0b1a33; border-color:var(--border)}
+
+    main{padding:28px; max-width:1000px}
+    .hdr{display:flex; flex-wrap:wrap; gap:12px; justify-content:space-between; align-items:center; margin-bottom:10px}
+    .hdr h2{margin:0; font-size:28px}
+    .badges{display:flex; gap:8px; flex-wrap:wrap}
+    .badge{font-size:12px; padding:6px 8px; border:1px solid var(--border); color:var(--muted); border-radius:999px}
+
+    .card{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px; margin:18px 0; box-shadow: 0 1px 1px rgba(0,0,0,.2), 0 16px 40px rgba(0,0,0,.25);}    
+    .card h3{margin:0 0 8px; font-size:18px}
+    .grid{display:grid; gap:14px}
+    @media (min-width:900px){ .grid.cols-2{grid-template-columns:1fr 1fr} }
+    .video{position:relative; width:100%; aspect-ratio:16/9; border:1px solid var(--border); border-radius:12px; overflow:hidden; background:#e5e7eb}
+    .video iframe{position:absolute; inset:0; width:100%; height:100%; border:0}
+
+    details{background:rgba(0,0,0,.03); border:1px dashed var(--border); border-radius:10px; padding:10px 12px}
+    details summary{cursor:pointer; color:var(--muted)}
+
+    .kpi{display:flex; gap:16px; flex-wrap:wrap}
+    .kpi div{background:#e9f2ec; border:1px solid var(--border); padding:10px 12px; border-radius:10px}
+
+    .list{margin:0; padding-left:18px}
+    .list li{margin:10px 0}
+    
+
+    .toolbar{display:flex; gap:10px; flex-wrap:wrap}
+    button{background:#e8f3ee; color:var(--ink); border:1px solid var(--border); padding:8px 12px; border-radius:10px; cursor:pointer}
+    button:hover{background:#d9ece4}
+    .yt-link{color:#c4302b; text-decoration:underline; font-weight:600}
+    .yt-btn{display:inline-flex; align-items:center; gap:8px; background:#ff0000; color:#fff; border:1px solid #b91c1c; padding:8px 12px; border-radius:999px; text-decoration:none}
+    .yt-btn:hover{filter:brightness(0.95)}
+    .yt-btn svg{display:block}
+
+    table{width:100%; border-collapse:collapse; font-size:14px}
+    th,td{padding:8px 10px; border:1px solid var(--border)}
+    th{background:#e5efe9; text-align:left}
+
+    /* GreenFeed schedule figure */
+    .schedule-figure{margin-top:10px}
+    .schedule-grid{display:grid; gap:12px}
+    @media (min-width:900px){ .schedule-grid{grid-template-columns:1fr 1fr 1fr} }
+    .sched-col{border:1px solid var(--border); border-radius:14px; padding:12px; background:#edf4f1}
+    .sched-head{font-weight:700; text-align:center; margin-bottom:10px}
+    .sched-pill{display:block; text-align:center; padding:8px 10px; border-radius:10px; border:1px solid var(--border); background:#e8f3ee; margin:8px 0; font-variant-numeric: tabular-nums}
+    .sched-col.control{background:#eef3ef}
+    .sched-col.improved{background:#e9f2ff}
+    .sched-col.free{background:#fff3df}
+
+    .footer{color:var(--muted); font-size:12px; margin:30px 0 80px}
+
+    @media (max-width:900px){ .layout{grid-template-columns:1fr}; nav{position:relative; height:auto} }
+
+    /* Print */
+    @media print{
+      nav{display:none}
+      body{background:#fff; color:#000}
+      main{padding:0}
+      .card{box-shadow:none}
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <h1>Animal Sampling</h1>
+      <input id="filter" type="search" placeholder="Filter sections…" oninput="filterNav(this.value)" />
+      <ul id="navlist">
+        <li><a href="#bw">BW</a></li>
+        <li><a href="#bcs">BCS</a></li>
+        <li><a href="#ingredient-dm">Ingredient DM</a></li>
+        <li><a href="#milk">Milk</a></li>
+        <li><a href="#urine">Urine</a></li>
+        <li><a href="#feces">Feces</a></li>
+        <li><a href="#methane">Methane emission — GreenFeed</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <section id="overview" class="card">
+        <div class="hdr">
+          <h2>Animal sampling — video guide</h2>
+        </div>
+        <p>For the full protocol, click <a href="https://docs.google.com/document/d/1Vr4QaM9lV2o2YSTUiETNkiFmgbtKpc4T/edit?usp=sharing&ouid=108573518698300363837&rtpof=true&sd=true" target="_blank" rel="noopener">here</a>.</p>
+        <ul class="list">
+        </ul>
+      </section>
+
+      <section id="bw" class="card">
+        <div class="hdr"><h2>Body weight (BW)</h2></div>
+        <div class="grid cols-2">
+          <div>
+            <ul class="list">
+              <li>Weigh on the set schedule: day 0, then every 7 days (e.g., 0, 7, 14, 21) through the end of period 3.</li>
+              <li>Always weigh before morning feed.</li>
+              <li>Before each weighing, verify scale accuracy with a known reference weight.</li>
+              <li>Bring the cow to the platform; wait for the read to stabilize.</li>
+              <li>Record the stable value.</li>
+            </ul>
+          </div>
+          <div>
+            <div class="toolbar" style="margin-top:8px">
+              <a class="yt-btn" href="" target="_blank" rel="noopener">
+                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+                Watch demo
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="bcs" class="card">
+        <div class="hdr"><h2>Body condition score (BCS)</h2></div>
+        <div class="grid cols-2">
+          <div>
+            <ul class="list">
+              <li>BCS should be assessed at the same time as BW.</li>
+              <li>Use the <a href="https://docs.google.com/document/d/1F9pzI9lwiELnYo4AfZBEw7npNKv343YU/edit" target="_blank" rel="noopener">standard scoring system</a>.</li>
+              <li>Two scorers should evaluate the BCS at the same time.</li>
+              <li>Play "Watch demo" for an example with Holstein dairy cows BC scoring.</li>
+            </ul>
+          </div>
+          <div>
+            <div class="toolbar" style="margin-top:8px">
+              <a class="yt-btn" href="https://www.youtube.com/watch?v=wASXNn_CTCU" target="_blank" rel="noopener">
+                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+                Watch demo
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="ingredient-dm" class="card">
+        <div class="hdr"><h2>Ingredient dry matter (DM)</h2></div>
+        <div class="grid cols-2">
+          <div>
+            <ul class="list">
+              <li>Collect a representative sample for each ingredient offered to animals.</li>
+              <li>Use a lab scale to weigh the sample.</li>
+              <li>Make sure to tare the container before weighing the sample.</li>
+              <li>Record sample fresh sample weight.</li>
+              <li>Dry the sample according to the specific method used (e.g. Forced circulation oven (preferred); Microwave oven; Air fryer; Koster tester).</li>
+              <li>Reweigh the sample to get the dry weight.</li>
+              <li>Compute the DM% (dry sample weight / fresh sample weight) * 100.</li>
+              <li>Use the DM result to adjust the diet.</li>
+            </ul>
+          </div>
+          <div>
+            <div class="toolbar" style="margin-top:8px">
+              <a class="yt-btn" href="https://canva.link/n50cenlmtnlwf5t" target="_blank" rel="noopener">
+                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+                Watch demo
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="milk" class="card">
+        <div class="hdr"><h2>Milk sampling</h2></div>
+        <div class="grid cols-2">
+          <div>
+            <ul class="list">
+              <li>Homogenize the milk produced by the cow (bucket) to get a representative sample.</li>
+              <li>Fill the sampler vial (see lab specifications)).</li>
+              <li>Add preservative if specified.</li>
+              <li>Label the vial appropriately.</li>
+              <li>Place the vial into a cooler with ice packs while collecting other samples.</li>
+              <li>Refrigerate until shipment.</li>
+            </ul>
+          </div>
+          <div>
+            <div class="toolbar" style="margin-top:8px">
+              <a class="yt-btn" href="https://www.canva.com/design/DAG_NJ5YDFE/ORBxfp65WGfqDDjqTwS0lg/watch?utm_content=DAG_NJ5YDFE&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h9830570677" target="_blank" rel="noopener">
+                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+                Watch demo
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="urine" class="card">
+        <div class="hdr"><h2>Urine sampling</h2></div>
+        <div class="grid cols-2">
+          <div>
+            <ul class="list">
+              <li>Get a Jar/container.</li>
+              <li>Gently massage the perineum (just below the vulva) with short, repeated strokes until she urinates.</li>
+              <li>Collect the urine into the jar/container.</li>
+              <li>Filter to remove any dirt or debris.</li>
+              <li>Proceed with the required preparation/preservation.</li>
+              <li>Place the sample in a cooler with ice packs while collecting other samples.</li>
+              <li>Freeze immediately.</li>
+            </ul>
+          </div>
+          <div>
+            <div class="toolbar" style="margin-top:8px">
+              <a class="yt-btn" href="https://www.canva.com/design/DAG_NAkHf1I/OOy3VgZp-iPE-wGo-DZK3w/watch?utm_content=DAG_NAkHf1I&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h4e00526e13" target="_blank" rel="noopener">
+                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+                Watch demo
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="feces" class="card">
+        <div class="hdr"><h2>Feces sampling</h2></div>
+        <div class="grid cols-2">
+          <div>
+            <ul class="list">
+              <li>If voluntary, collect fresh grab sample at the time of defecation.</li>
+              <li>If not voluntary, collect a sample from the animal rectum:</li>
+              <li>Wearing palpation gloves, gently insert a finger and then the hand into the rectum.</li>
+              <li>Grab a hanfull of feces.</li>
+              <li>Place the sample into a drying tray.</li>
+              <li>Dry immediately.</li>
+            </ul>
+          </div>
+          <div>
+            <div class="toolbar" style="margin-top:8px">
+              <a class="yt-btn" href="https://www.canva.com/design/DAG_NCgKTCg/vZppeWtd-uRoIaC7zcz0LQ/watch?utm_content=DAG_NCgKTCg&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hc70c91783b" target="_blank" rel="noopener">
+                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+                Watch demo
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="methane" class="card">
+        <div class="hdr"><h2>Methane emission — GreenFeed</h2></div>
+        <div class="grid cols-2">
+          <div>
+            <ul class="list">
+              <li><strong>Sampling design:</strong> 8 sampling time points over 3 consecutive days to represent every 3 h across a 24 h cycle.</li>
+              <li><strong>Sampling times:</strong>
+                <ul class="list">
+                  <li><strong>Day 1:</strong> 0900, 1500, 2100 h</li>
+                  <li><strong>Day 2:</strong> 0300, 1200, 1800 h</li>
+                  <li><strong>Day 3:</strong> 0000, 0600 h</li>
+                </ul>
+              </li>
+              <li><strong>Measurement event settings:</strong> GreenFeed dispenses 5 drops of pellets (approximately 36 g per drop) at 30 second intervals to ensure a 5 minute continuous measurement.</li>
+              <li><strong>Background air and washout:</strong> Between sampling events, GreenFeed collects background air for a 2 minute washout to re-equilibrate to ambient gas concentrations.</li>
+              <li>If a cow does not voluntarily visit within the assigned time block, she may be encouraged with a small quantity of grain to maintain balanced sampling frequency across cows and treatments.</li>
+              <li><strong>Calibration:</strong> Calibrate all GreenFeed units daily using the manufacturer’s auto calibration system.</li>
+            </ul>
+
+            <div class="schedule-figure">
+              <div class="badge" style="display:inline-block; margin-bottom:8px">Example schedule figure</div>
+              <div class="schedule-grid" role="img" aria-label="Example GreenFeed schedule with Control, Improved, and Free time points">
+                <div class="sched-col control">
+                  <div class="sched-head">Control</div>
+                  <span class="sched-pill">00:00</span>
+                  <span class="sched-pill">03:00</span>
+                  <span class="sched-pill">06:00</span>
+                  <span class="sched-pill">09:00</span>
+                  <span class="sched-pill">12:00</span>
+                  <span class="sched-pill">15:00</span>
+                  <span class="sched-pill">18:00</span>
+                  <span class="sched-pill">21:00</span>
+                </div>
+                <div class="sched-col improved">
+                  <div class="sched-head">Improved</div>
+                  <span class="sched-pill">~00:07</span>
+                  <span class="sched-pill">~03:07</span>
+                  <span class="sched-pill">~06:07</span>
+                  <span class="sched-pill">~09:07</span>
+                  <span class="sched-pill">~12:07</span>
+                  <span class="sched-pill">~15:07</span>
+                  <span class="sched-pill">~18:07</span>
+                  <span class="sched-pill">~21:07</span>
+                </div>
+                <div class="sched-col free">
+                  <div class="sched-head">Free</div>
+                  <span class="sched-pill">~00:15</span>
+                  <span class="sched-pill">~03:15</span>
+                  <span class="sched-pill">~06:15</span>
+                  <span class="sched-pill">~09:15</span>
+                  <span class="sched-pill">~12:15</span>
+                  <span class="sched-pill">~15:15</span>
+                  <span class="sched-pill">~18:15</span>
+                  <span class="sched-pill">~21:15</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="toolbar" style="margin-top:8px">
+              <a class="yt-btn" href="https://www.youtube.com/watch?v=Oe_u9y2Wcic" target="_blank" rel="noopener">
+                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+                Watch demo
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="footer">© 2025 GMH × UCD — Practical guide. Interactive SOP developed by Maria Helena de Oliveira.</div>
+    </main>
+  </div>
+
+  <script>
+    // Expand / collapse all details
+    function toggleAll(open){ document.querySelectorAll('details').forEach(d=>d.open=open) }
+
+    // Filter nav
+    function filterNav(q){
+      q = (q||'').toLowerCase();
+      document.querySelectorAll('#navlist li').forEach(li =>{
+        const a = li.querySelector('a');
+        li.style.display = a.textContent.toLowerCase().includes(q) ? '' : 'none';
+      });
+    }
+
+    // Open external video
+    function openVideo(btn, url){ if(url) window.open(url, '_blank', 'noopener'); }
+  </script>
+</body>
+</html>'''
+
+
+def write_html(out_path: str) -> None:
+  os.makedirs(os.path.dirname(out_path) or '.', exist_ok=True)
+  with open(out_path, 'w', encoding='utf-8') as f:
+    f.write(HTML)
+
+
+class _Handler(BaseHTTPRequestHandler):
+  def do_GET(self):
+    parsed = urlparse(self.path)
+    if parsed.path in ('/', '/index.html'):
+      body = HTML.encode('utf-8')
+      self.send_response(200)
+      self.send_header('Content-Type', 'text/html; charset=utf-8')
+      self.send_header('Content-Length', str(len(body)))
+      self.end_headers()
+      self.wfile.write(body)
+      return
+    if parsed.path == '/favicon.ico':
+      self.send_response(204)
+      self.end_headers()
+      return
+    self.send_response(404)
+    self.send_header('Content-Type', 'text/plain; charset=utf-8')
+    self.end_headers()
+    self.wfile.write(b'Not found')
+
+
+def main():
+  parser = argparse.ArgumentParser(description='Animal SOP: write HTML (default) or serve locally')
+  parser.add_argument('--serve', action='store_true', help='Run a local web server instead of writing a file')
+  parser.add_argument('--port', type=int, default=int(os.environ.get('PORT', '8000')), help='Port for --serve (default: 8000)')
+  parser.add_argument('--out', default=os.path.join(os.path.dirname(__file__), 'AnimalSamplingPracticalGuide.html'), help='Output HTML path (default: ./AnimalSamplingPracticalGuide.html)')
+  parser.add_argument('--open', dest='open_file', action='store_true', help='Open the generated HTML file in your browser')
+  args = parser.parse_args()
+
+  if args.serve:
+    server = HTTPServer(('127.0.0.1', args.port), _Handler)
+    print(f'Animal SOP server running at http://127.0.0.1:{args.port}/ (Ctrl+C to stop)')
+    try:
+      server.serve_forever()
+    except KeyboardInterrupt:
+      pass
+    finally:
+      server.server_close()
+    return
+
+  out_path = os.path.abspath(args.out)
+  write_html(out_path)
+  print(f'Wrote HTML to {out_path}')
+  if args.open_file:
+    webbrowser.open('file://' + out_path)
+
+
+if __name__ == '__main__':
+  main()
+
+# python3 Animal_SOP.py
