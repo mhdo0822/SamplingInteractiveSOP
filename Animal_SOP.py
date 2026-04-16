@@ -184,7 +184,7 @@ HTML = '''<!DOCTYPE html>
           </div>
           <div>
             <div class="toolbar" style="margin-top:8px">
-              <a class="yt-btn" href="https://canva.link/n50cenlmtnlwf5t" target="_blank" rel="noopener">
+              <a class="yt-btn" href="https://canva.link/9co8a5twacqum9a" target="_blank" rel="noopener">
                 <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
                 Watch demo
               </a>
